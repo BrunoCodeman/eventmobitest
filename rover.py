@@ -1,32 +1,109 @@
 directions = {"N":1, "E": 2, "S": 3, "W": 4}                   
-turns=[(0,1),(1,0),(0,-1),(-1,0)] 
 
-def turn_left(x: int, y: int, direction: str) -> float:
-    coord = direction - 1 + 4
-    return x, y, coord % 4
+def turn_left(x: int, y: int, direction: int) -> tuple:
+    """
+    Turns the Rover to the left
+    Parameters:
+    - x: The X axis 
+    - y: The Y axis
+    - direction: A number representing a direction from the directions dictionary above
 
-def turn_right(x: int, y:int , direction: str) -> float:
-    coord = direction + 1
-    return x, y, coord % 4
+    Returns:
+    - A tuple with the actual values of the axis X and Y and the direction of the rover 
+    """
 
-def move(x: int, y: int, direction: str) -> float:
-    return x + turns[direction][0], y + turns[direction][1], direction - 1
+    drc = direction - 1
+    if drc < directions["N"]:
+        drc = directions["W"]    
 
-movements = {"r": turn_right, "l": turn_left, "m": move}
+    return x, y, drc
+
+def turn_right(x: int, y:int, direction: int) -> tuple:
+    """
+    Turns the Rover to the right 
+    Parameters:
+    - x: The X axis 
+    - y: The Y axis
+    - direction: A number representing a direction from the directions dictionary above
+
+    Returns:
+    - A tuple with the actual values of the axis X and Y and the direction of the rover 
+    """
+    
+    drc = direction + 1
+    if drc > directions["W"]:
+        drc = directions["N"]  
+
+    return x, y, drc
+ 
+def move(x: int, y: int, direction: int) -> tuple:
+    """
+    Moves the rover according to the coordenates:
+
+    Parameters:
+    - x: The X axis 
+    - y: The Y axis
+    - direction: A number representing a direction from the directions dictionary above
+
+    Returns:
+    - A tuple with the actual values of the axis X and Y and the direction of the rover 
+    """
+    m = {   
+            1: lambda x,y,d: (x, y+1, d), 
+            2: lambda x,y,d: (x+1, y, d),
+            3: lambda x,y,d: (x, y-1, d),
+            4: lambda x,y,d: (x-1, y, d)
+        }
+
+    return m[direction](x, y, direction)
+
+def define_plateau(user_input: str) -> list:
+    """
+    Set the coordinates of the plateau
+
+    Parameters:
+    - user_input: The command center input of the plateau upper-right
+
+    Returns:
+    - A list with the upper right values of the plateau
+    """
+
+    plateau_coords = user_input.strip(" ").split(" ")        
+    if len(plateau_coords) is not 2:
+        raise Exception("plateau must have 2 values")
+    
+    return list(map(int, plateau_coords))
+
+movements = {"R": turn_right, "L": turn_left, "M": move}
+
+def exec(landing: str, instructions: "str"):
+    """
+    Executes the Rover commands based on the landing parameters and instructions
+    
+    Parameters:
+    - landing: The Rover landing parameters
+    """
+    parameters = landing.split(" ")
+    x, y = (int(parameters[0]), int(parameters[1]))
+    direction = directions[parameters[2].upper()]
+    for i in instructions: 
+        x, y, direction = movements[i](x, y, direction)
+    
+    return x, y, direction
 
 def main():
+    """
+    Starts the Rover app
+    """
     try:
-        upper_right = input()
+        upper_right = define_plateau(user_input = input("Plateau size: "))
         while True:
-            params = input().split(" ") 
-            x, y, direction = (int(params[0]), int(params[1]), directions[params[2].upper()])
-            instructions = input().lower() 
-            for i in instructions: 
-                x, y, direction = movements[i](x, y, direction)
-            print("{0} {1} {2}".format(x, y, params[2]))
+            parameters = input("Landing (separated by spaces): ") 
+            instructions = input("Instructions (separated by spaces): ") 
+            x, y, _ = exec(parameters, instructions)
+            print("{0} {1} {2}".format(x, y, parameters[2]))
     except Exception as ex:
-        print(str(ex))
-    
+        print(ex)
     
 
 if __name__ == '__main__':
